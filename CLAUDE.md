@@ -62,6 +62,7 @@ The complete agent implementation from [How to Build an Agent](https://ampcode.c
 ### ✅ Phase 2: Basic File Tools - COMPLETED  
 - ✅ `read_file`: Read file contents with security checks
 - ✅ `http_request`: Make web requests with timeout handling
+- ✅ `search`: Web search using Brave Search API
 
 ### ✅ Phase 3: System Tools - COMPLETED
 - ✅ `execute_command`: Run shell commands safely with timeout
@@ -77,6 +78,7 @@ The complete agent implementation from [How to Build an Agent](https://ampcode.c
 1. **read_file**: Reads file contents from filesystem with security validation
 2. **execute_command**: Executes shell commands with 30-second timeout
 3. **http_request**: Makes HTTP requests with 10-second timeout and JSON/text handling
+4. **search**: Searches the web using Brave Search API with configurable count and country
 
 ## Development Commands (Updated)
 - `yarn install`: Install dependencies (includes Jest)
@@ -89,7 +91,7 @@ The complete agent implementation from [How to Build an Agent](https://ampcode.c
 ## Environment Setup
 - Requires Node.js v16+
 - Uses Yarn as package manager
-- Needs valid Anthropic API key in `.env` file
+- Needs valid Anthropic API key and Brave Search API key in `.env` file
 - TypeScript for type safety and better development experience
 
 ## Project Status

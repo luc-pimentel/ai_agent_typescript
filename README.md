@@ -16,7 +16,7 @@ The agent demonstrates how complex interactions can emerge from a simple, well-s
 - 🧠 **Claude Integration**: Uses Anthropic's Claude 3.5 Sonnet model
 - 💭 **Conversation Memory**: Maintains context across the entire conversation
 - 🔄 **Interactive Loop**: CLI interface for real-time conversations
-- 🛠️ **Tool System**: Extensible tool registry with file operations, command execution, and HTTP requests
+- 🛠️ **Tool System**: Extensible tool registry with file operations, command execution, HTTP requests, and web search
 - 📝 **TypeScript**: Fully typed implementation for better development experience
 - 🧪 **Testing**: Comprehensive Jest test suite for all components
 
@@ -41,9 +41,10 @@ cd ai_agent_typescript
 yarn install
 ```
 
-3. Create a `.env` file with your Anthropic API key:
+3. Create a `.env` file with your API keys:
 ```
-ANTHROPIC_API_KEY=your_api_key_here
+ANTHROPIC_API_KEY=your_anthropic_api_key_here
+BRAVE_API_KEY=your_brave_search_api_key_here
 ```
 
 4. Run the agent:
@@ -66,6 +67,7 @@ The project includes a comprehensive test suite that validates:
 - **File Operations**: Reading files from the filesystem
 - **Command Execution**: Running shell commands like `git status`
 - **HTTP Requests**: Making web requests to external APIs
+- **Web Search**: Searching the web using Brave Search API
 - **Tool Registry**: Tool registration and execution flow
 
 Run tests with:
@@ -88,6 +90,7 @@ The agent follows a simple but powerful architecture:
   - `read_file`: Read contents from filesystem files
   - `execute_command`: Run shell commands and capture output
   - `http_request`: Make HTTP requests to web APIs
+  - `search`: Search the web using Brave Search API
 
 ## Inspiration
 

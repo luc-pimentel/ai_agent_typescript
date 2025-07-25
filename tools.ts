@@ -178,8 +178,83 @@ export const httpRequestTool: Tool = {
   }
 };
 
+export const searchTool: Tool = {
+  name: 'search',
+  description: 'Search the web using Brave Search API',
+  input_schema: {
+    type: 'object',
+    properties: {
+      q: {
+        type: 'string',
+        description: 'Search query (max 400 characters, 50 words)'
+      },
+      count: {
+        type: 'number',
+        description: 'Number of search results to return (max 20)',
+        minimum: 1,
+        maximum: 20
+      },
+      country: {
+        type: 'string',
+        description: 'Country code for search results (e.g., US, UK, CA)',
+        default: 'US'
+      }
+    },
+    required: ['q']
+  },
+  execute: async (input: { q: string; count?: number; country?: string }): Promise<string> => {
+    try {
+      const apiKey = process.env.BRAVE_API_KEY;
+      if (!apiKey) {
+        throw new Error('BRAVE_API_KEY environment variable is not set');
+      }
+
+      const params = new URLSearchParams({
+        q: input.q,
+        count: (input.count || 10).toString(),
+        country: input.country || 'US'
+      });
+
+      const response = await fetch(`https://api.search.brave.com/res/v1/web/search?${params}`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Accept-Encoding': 'gzip',
+          'X-Subscription-Token': apiKey
+        },
+        signal: AbortSignal.timeout(10000) // 10 second timeout
+      });
+
+      if (!response.ok) {
+        throw new Error(`Brave Search API error: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      
+      // Format the response for better readability
+      let result = `Search Results for: "${input.q}"\n`;
+      result += `Country: ${input.country || 'US'}, Results: ${data.web?.results?.length || 0}\n\n`;
+
+      if (data.web?.results) {
+        data.web.results.forEach((item: any, index: number) => {
+          result += `${index + 1}. ${item.title}\n`;
+          result += `   URL: ${item.url}\n`;
+          result += `   Description: ${item.description}\n\n`;
+        });
+      } else {
+        result += 'No search results found.\n';
+      }
+
+      return result;
+    } catch (error) {
+      throw new Error(`Search failed: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+};
+
 // Create and export default registry with tools
 export const defaultToolRegistry = new ToolRegistry();
 defaultToolRegistry.register(readFileTool);
 defaultToolRegistry.register(executeCommandTool);
 defaultToolRegistry.register(httpRequestTool);
+defaultToolRegistry.register(searchTool);

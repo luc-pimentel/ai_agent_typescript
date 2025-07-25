@@ -1,4 +1,4 @@
-import { readFileTool, executeCommandTool, httpRequestTool, ToolRegistry } from '../tools';
+import { readFileTool, executeCommandTool, httpRequestTool, searchTool, ToolRegistry } from '../tools';
 
 describe('Tool Integration Tests', () => {
   let toolRegistry: ToolRegistry;
@@ -8,6 +8,7 @@ describe('Tool Integration Tests', () => {
     toolRegistry.register(readFileTool);
     toolRegistry.register(executeCommandTool);
     toolRegistry.register(httpRequestTool);
+    toolRegistry.register(searchTool);
   });
 
   describe('read_file tool', () => {
@@ -83,18 +84,77 @@ describe('Tool Integration Tests', () => {
     });
   });
 
+  describe('search tool', () => {
+    it('should search using Brave Search API', async () => {
+      // Skip if no API key is available
+      if (!process.env.BRAVE_API_KEY) {
+        console.log('Skipping search test - BRAVE_API_KEY not set');
+        return;
+      }
+
+      const result = await toolRegistry.execute({
+        name: 'search',
+        input: { 
+          q: 'TypeScript programming language',
+          count: 5,
+          country: 'US'
+        }
+      });
+
+      expect(result).toContain('Search Results for: "TypeScript programming language"');
+      expect(result).toContain('Country: US');
+      expect(typeof result).toBe('string');
+    }, 15000); // Increased timeout for API request
+
+    it('should handle missing API key gracefully', async () => {
+      // Temporarily remove API key
+      const originalKey = process.env.BRAVE_API_KEY;
+      delete process.env.BRAVE_API_KEY;
+
+      const result = await toolRegistry.execute({
+        name: 'search',
+        input: { q: 'test query' }
+      });
+
+      expect(result).toContain('Error executing tool');
+      expect(result).toContain('BRAVE_API_KEY environment variable is not set');
+
+      // Restore API key
+      if (originalKey) {
+        process.env.BRAVE_API_KEY = originalKey;
+      }
+    });
+
+    it('should use default parameters when not provided', async () => {
+      if (!process.env.BRAVE_API_KEY) {
+        console.log('Skipping search test - BRAVE_API_KEY not set');
+        return;
+      }
+
+      const result = await toolRegistry.execute({
+        name: 'search',
+        input: { q: 'simple test' }
+      });
+
+      expect(result).toContain('Search Results for: "simple test"');
+      expect(result).toContain('Country: US'); // Default country
+      expect(typeof result).toBe('string');
+    }, 15000);
+  });
+
   describe('ToolRegistry', () => {
     it('should return all registered tools', () => {
       const tools = toolRegistry.getAll();
-      expect(tools).toHaveLength(3);
+      expect(tools).toHaveLength(4);
       expect(tools.map(t => t.name)).toContain('read_file');
       expect(tools.map(t => t.name)).toContain('execute_command');
       expect(tools.map(t => t.name)).toContain('http_request');
+      expect(tools.map(t => t.name)).toContain('search');
     });
 
     it('should get tool definitions for Claude API', () => {
       const definitions = toolRegistry.getToolDefinitions();
-      expect(definitions).toHaveLength(3);
+      expect(definitions).toHaveLength(4);
       expect(definitions[0]).toHaveProperty('name');
       expect(definitions[0]).toHaveProperty('description');
       expect(definitions[0]).toHaveProperty('input_schema');
