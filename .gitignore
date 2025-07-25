@@ -18,6 +18,10 @@ build/
 # TypeScript
 *.tsbuildinfo
 
+# Testing
+coverage/
+*.lcov
+
 # IDE
 .vscode/
 .idea/

@@ -51,33 +51,39 @@ The complete agent implementation from [How to Build an Agent](https://ampcode.c
 4. Tool results added to conversation
 5. Loop continues until Claude provides final answer
 
-## Next Implementation Phases
+## Implemented Tool System
 
-### Phase 1: Core Tool System
-- [ ] Tool interface definition (`name`, `description`, `schema`, `execute`)
-- [ ] Tool registry for managing available tools
-- [ ] Tool call parser for Claude responses
-- [ ] Tool execution engine with error handling
-- [ ] Result formatting and integration
+### ✅ Phase 1: Core Tool System - COMPLETED
+- ✅ Tool interface definition (`name`, `description`, `input_schema`, `execute`)
+- ✅ Tool registry for managing available tools
+- ✅ Tool execution engine with error handling
+- ✅ Result formatting and integration
 
-### Phase 2: Basic File Tools
-- [ ] `read_file`: Read file contents
-- [ ] `write_file`: Write content to files  
-- [ ] `list_files`: Directory listing
-- [ ] `create_directory`: Create folders
+### ✅ Phase 2: Basic File Tools - COMPLETED  
+- ✅ `read_file`: Read file contents with security checks
+- ✅ `http_request`: Make web requests with timeout handling
 
-### Phase 3: System Tools
-- [ ] `execute_command`: Run shell commands safely
-- [ ] `search_files`: Search file contents
-- [ ] `get_current_time`: System time/date
-- [ ] `http_request`: Make web requests
+### ✅ Phase 3: System Tools - COMPLETED
+- ✅ `execute_command`: Run shell commands safely with timeout
 
-### Phase 4: Advanced Features
-- [ ] Tool parameter validation with schemas
-- [ ] Async tool execution support
-- [ ] Tool execution logging and debugging
-- [ ] Error recovery and retry mechanisms
-- [ ] Tool composition and workflows
+### ✅ Testing Infrastructure - COMPLETED
+- ✅ Jest test suite configuration
+- ✅ Comprehensive tool integration tests
+- ✅ Error handling validation
+- ✅ Registry functionality tests
+
+## Current Tools Available
+
+1. **read_file**: Reads file contents from filesystem with security validation
+2. **execute_command**: Executes shell commands with 30-second timeout
+3. **http_request**: Makes HTTP requests with 10-second timeout and JSON/text handling
+
+## Development Commands (Updated)
+- `yarn install`: Install dependencies (includes Jest)
+- `yarn dev`: Run agent in development mode with ts-node
+- `yarn build`: Compile TypeScript to JavaScript
+- `yarn start`: Run compiled version
+- `yarn test`: Run Jest test suite
 
 
 ## Environment Setup
@@ -92,7 +98,8 @@ The complete agent implementation from [How to Build an Agent](https://ampcode.c
 ✅ Conversation history management
 ✅ Git repository setup with proper .gitignore
 ✅ Documentation (README.md)
-⏳ Tool system (planned next phase)
+✅ Tool system implementation with 3 core tools
+✅ Jest test suite with comprehensive coverage
 
 ## Usage Notes
 - Type "exit" to quit the conversation

@@ -16,7 +16,9 @@ The agent demonstrates how complex interactions can emerge from a simple, well-s
 - 🧠 **Claude Integration**: Uses Anthropic's Claude 3.5 Sonnet model
 - 💭 **Conversation Memory**: Maintains context across the entire conversation
 - 🔄 **Interactive Loop**: CLI interface for real-time conversations
+- 🛠️ **Tool System**: Extensible tool registry with file operations, command execution, and HTTP requests
 - 📝 **TypeScript**: Fully typed implementation for better development experience
+- 🧪 **Testing**: Comprehensive Jest test suite for all components
 
 ## Getting Started
 
@@ -49,6 +51,28 @@ ANTHROPIC_API_KEY=your_api_key_here
 yarn dev
 ```
 
+## Development
+
+### Available Scripts
+
+- `yarn dev`: Run the agent in development mode
+- `yarn build`: Compile TypeScript to JavaScript
+- `yarn start`: Run the compiled version
+- `yarn test`: Run the Jest test suite
+
+### Testing
+
+The project includes a comprehensive test suite that validates:
+- **File Operations**: Reading files from the filesystem
+- **Command Execution**: Running shell commands like `git status`
+- **HTTP Requests**: Making web requests to external APIs
+- **Tool Registry**: Tool registration and execution flow
+
+Run tests with:
+```bash
+yarn test
+```
+
 ## Usage
 
 Once started, the agent will prompt you for input. Simply type your messages and the agent will respond while maintaining conversation context. Type `exit` to quit.
@@ -60,6 +84,10 @@ The agent follows a simple but powerful architecture:
 - **Agent Class**: Core orchestrator that manages conversation flow
 - **Message Interface**: Type-safe message structure for conversation history
 - **Control Loop**: Handles user input/output and maintains conversation state
+- **Tool System**: Extensible registry of tools that the agent can use:
+  - `read_file`: Read contents from filesystem files
+  - `execute_command`: Run shell commands and capture output
+  - `http_request`: Make HTTP requests to web APIs
 
 ## Inspiration
 
