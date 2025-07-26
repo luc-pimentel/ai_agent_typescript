@@ -29,7 +29,7 @@ async function main() {
       }
 
       console.log('🤖 Agent: Thinking...');
-      const response = await agent.chat(userInput);
+      const response = await agent.processMessage(userInput);
       console.log(`🤖 Agent: ${response}\n`);
 
     } catch (error) {

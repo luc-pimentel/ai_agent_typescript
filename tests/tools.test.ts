@@ -1,4 +1,4 @@
-import { readFileTool, executeCommandTool, httpRequestTool, searchTool, ToolRegistry } from '../tools';
+import { readFileTool, executeCommandTool, httpRequestTool, searchTool, todoWriteTool, ToolRegistry } from '../tools';
 
 describe('Tool Integration Tests', () => {
   let toolRegistry: ToolRegistry;
@@ -9,6 +9,7 @@ describe('Tool Integration Tests', () => {
     toolRegistry.register(executeCommandTool);
     toolRegistry.register(httpRequestTool);
     toolRegistry.register(searchTool);
+    toolRegistry.register(todoWriteTool);
   });
 
   describe('read_file tool', () => {
@@ -142,19 +143,103 @@ describe('Tool Integration Tests', () => {
     }, 15000);
   });
 
+  describe('todo_write tool', () => {
+    it('should create and format todo list successfully', async () => {
+      const testTodos = [
+        {
+          id: '1',
+          content: 'Test task 1',
+          status: 'pending' as const,
+          priority: 'high' as const
+        },
+        {
+          id: '2', 
+          content: 'Test task 2',
+          status: 'in_progress' as const,
+          priority: 'medium' as const
+        },
+        {
+          id: '3',
+          content: 'Test task 3', 
+          status: 'completed' as const,
+          priority: 'low' as const
+        }
+      ];
+
+      const result = await toolRegistry.execute({
+        name: 'todo_write',
+        input: { todos: testTodos }
+      });
+
+      expect(result).toContain('Todos updated successfully!');
+      expect(result).toContain('Progress: 1 completed, 1 in progress, 1 pending');
+      expect(result).toContain('Current todos:');
+      expect(result).toContain('Test task 1');
+      expect(result).toContain('Test task 2');
+      expect(result).toContain('Test task 3');
+      expect(result).toContain('✅'); // completed icon
+      expect(result).toContain('🔄'); // in progress icon
+      expect(result).toContain('⏳'); // pending icon
+    });
+
+    it('should handle empty todo list', async () => {
+      const result = await toolRegistry.execute({
+        name: 'todo_write',
+        input: { todos: [] }
+      });
+
+      expect(result).toContain('Todos updated successfully!');
+      expect(result).toContain('Progress: 0 completed, 0 in progress, 0 pending');
+      expect(result).toContain('No todos in the list.');
+    });
+
+    it('should show priority icons correctly', async () => {
+      const testTodos = [
+        {
+          id: '1',
+          content: 'High priority task',
+          status: 'pending' as const,
+          priority: 'high' as const
+        },
+        {
+          id: '2',
+          content: 'Medium priority task', 
+          status: 'pending' as const,
+          priority: 'medium' as const
+        },
+        {
+          id: '3',
+          content: 'Low priority task',
+          status: 'pending' as const,
+          priority: 'low' as const
+        }
+      ];
+
+      const result = await toolRegistry.execute({
+        name: 'todo_write',
+        input: { todos: testTodos }
+      });
+
+      expect(result).toContain('🔴'); // high priority
+      expect(result).toContain('🟡'); // medium priority  
+      expect(result).toContain('🟢'); // low priority
+    });
+  });
+
   describe('ToolRegistry', () => {
     it('should return all registered tools', () => {
       const tools = toolRegistry.getAll();
-      expect(tools).toHaveLength(4);
+      expect(tools).toHaveLength(5);
       expect(tools.map(t => t.name)).toContain('read_file');
       expect(tools.map(t => t.name)).toContain('execute_command');
       expect(tools.map(t => t.name)).toContain('http_request');
       expect(tools.map(t => t.name)).toContain('search');
+      expect(tools.map(t => t.name)).toContain('todo_write');
     });
 
     it('should get tool definitions for Claude API', () => {
       const definitions = toolRegistry.getToolDefinitions();
-      expect(definitions).toHaveLength(4);
+      expect(definitions).toHaveLength(5);
       expect(definitions[0]).toHaveProperty('name');
       expect(definitions[0]).toHaveProperty('description');
       expect(definitions[0]).toHaveProperty('input_schema');

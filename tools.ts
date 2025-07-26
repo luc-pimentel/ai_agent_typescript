@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import { TodoWriteInput } from './agent';
 
 const execAsync = promisify(exec);
 
@@ -252,9 +253,74 @@ export const searchTool: Tool = {
   }
 };
 
+export const todoWriteTool: Tool = {
+  name: 'todo_write',
+  description: 'Write and update a todo list to track task progress. The tool replaces the entire todo list with the provided todos.',
+  input_schema: {
+    type: 'object',
+    properties: {
+      todos: {
+        type: 'array',
+        description: 'The updated todo list',
+        items: {
+          type: 'object',
+          properties: {
+            content: {
+              type: 'string',
+              description: 'The todo item description'
+            },
+            status: {
+              type: 'string',
+              enum: ['pending', 'in_progress', 'completed'],
+              description: 'Current status of the todo item'
+            },
+            priority: {
+              type: 'string',
+              enum: ['high', 'medium', 'low'],
+              description: 'Priority level of the todo item'
+            },
+            id: {
+              type: 'string',
+              description: 'Unique identifier for the todo item'
+            }
+          },
+          required: ['content', 'status', 'priority', 'id']
+        }
+      }
+    },
+    required: ['todos']
+  },
+  execute: async (input: TodoWriteInput): Promise<string> => {
+    // This tool execution is handled specially by the Agent class
+    // It returns a formatted response for the conversation
+    const completedCount = input.todos.filter(todo => todo.status === 'completed').length;
+    const inProgressCount = input.todos.filter(todo => todo.status === 'in_progress').length;
+    const pendingCount = input.todos.filter(todo => todo.status === 'pending').length;
+    
+    let result = `Todos updated successfully!\n\n`;
+    result += `Progress: ${completedCount} completed, ${inProgressCount} in progress, ${pendingCount} pending\n\n`;
+    
+    if (input.todos.length > 0) {
+      result += `Current todos:\n`;
+      input.todos.forEach((todo, index) => {
+        const statusIcon = todo.status === 'completed' ? '✅' : 
+                          todo.status === 'in_progress' ? '🔄' : '⏳';
+        const priorityIcon = todo.priority === 'high' ? '🔴' : 
+                            todo.priority === 'medium' ? '🟡' : '🟢';
+        result += `${index + 1}. ${statusIcon} ${priorityIcon} ${todo.content}\n`;
+      });
+    } else {
+      result += `No todos in the list.`;
+    }
+    
+    return result;
+  }
+};
+
 // Create and export default registry with tools
 export const defaultToolRegistry = new ToolRegistry();
 defaultToolRegistry.register(readFileTool);
 defaultToolRegistry.register(executeCommandTool);
 defaultToolRegistry.register(httpRequestTool);
 defaultToolRegistry.register(searchTool);
+defaultToolRegistry.register(todoWriteTool);
