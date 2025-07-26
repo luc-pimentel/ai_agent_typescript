@@ -317,6 +317,26 @@ export const todoWriteTool: Tool = {
   }
 };
 
+export const executeSequenceTool: Tool = {
+  name: 'execute_sequence',
+  description: 'Execute all pending todos in sequence automatically. This will work through each pending todo item step by step.',
+  input_schema: {
+    type: 'object',
+    properties: {
+      confirm: {
+        type: 'boolean',
+        description: 'Confirm that you want to execute the todo sequence',
+        default: true
+      }
+    },
+    required: []
+  },
+  execute: async (input: { confirm?: boolean }): Promise<string> => {
+    // This tool execution is handled specially by the Agent class
+    return `Execute sequence tool triggered with confirm: ${input.confirm !== false}`;
+  }
+};
+
 // Create and export default registry with tools
 export const defaultToolRegistry = new ToolRegistry();
 defaultToolRegistry.register(readFileTool);
@@ -324,3 +344,4 @@ defaultToolRegistry.register(executeCommandTool);
 defaultToolRegistry.register(httpRequestTool);
 defaultToolRegistry.register(searchTool);
 defaultToolRegistry.register(todoWriteTool);
+defaultToolRegistry.register(executeSequenceTool);

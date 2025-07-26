@@ -102,6 +102,34 @@ class Agent {
             // Show progress if significant changes occurred
             if (hasStatusChanges) {
               this.showTodoProgress();
+              
+              // Check if we should auto-progress to next todo
+              const nextTodoPrompt = await this.autoProgressToNextTodo();
+              if (nextTodoPrompt) {
+                // Add the auto-progression prompt to continue the conversation
+                this.addMessage('user', nextTodoPrompt);
+                continue; // Continue the loop to process the next todo
+              }
+            }
+          } else if (toolCall.name === 'execute_sequence') {
+            // Special handling for execute_sequence tool
+            const confirm = toolCall.input.confirm !== false;
+            
+            if (confirm) {
+              const sequenceResult = await this.executeTodoSequence();
+              const toolUseBlock = content.find(block => block.type === 'tool_use' && block.name === toolCall.name) as any;
+              toolResults.push({
+                type: 'tool_result',
+                tool_use_id: toolUseBlock?.id,
+                content: sequenceResult
+              });
+            } else {
+              const toolUseBlock = content.find(block => block.type === 'tool_use' && block.name === toolCall.name) as any;
+              toolResults.push({
+                type: 'tool_result',
+                tool_use_id: toolUseBlock?.id,
+                content: "Todo sequence execution cancelled."
+              });
             }
           } else {
             const result = await this.toolRegistry.execute(toolCall);
@@ -152,6 +180,39 @@ class Agent {
     return false;
   }
 
+  private getNextPendingTodo(): TodoWriteInput['todos'][0] | null {
+    return this.todos.find(todo => todo.status === 'pending') || null;
+  }
+
+  private getCurrentInProgressTodo(): TodoWriteInput['todos'][0] | null {
+    return this.todos.find(todo => todo.status === 'in_progress') || null;
+  }
+
+  private async autoProgressToNextTodo(): Promise<string | null> {
+    const inProgress = this.getCurrentInProgressTodo();
+    const nextPending = this.getNextPendingTodo();
+    
+    // If no task in progress and there's a pending task, start it
+    if (!inProgress && nextPending) {
+      console.log(`\n🔄 Auto-starting next todo: ${nextPending.content}`);
+      
+      // Update todo status to in_progress
+      const updatedTodos = this.todos.map(todo => 
+        todo.id === nextPending.id 
+          ? { ...todo, status: 'in_progress' as const }
+          : todo
+      );
+      this.todos = updatedTodos;
+      
+      // Create a focused prompt for this specific todo
+      const todoPrompt = `Please work on this specific todo item: "${nextPending.content}". Focus only on completing this task. When done, mark it as completed and move to the next pending item.`;
+      
+      return todoPrompt;
+    }
+    
+    return null;
+  }
+
   private showTodoProgress(): void {
     const completed = this.todos.filter(todo => todo.status === 'completed').length;
     const total = this.todos.length;
@@ -194,6 +255,11 @@ class Agent {
   }
 
   async processMessage(userInput: string): Promise<string> {
+    // Check for special commands
+    if (userInput.toLowerCase().trim() === '/execute-todos') {
+      return this.executeTodoSequence();
+    }
+    
     // Analyze if task might benefit from todos
     if (this.todos.length === 0 && this.analyzeTaskComplexity(userInput)) {
       const suggestion = "\n💡 This looks like a complex task that might benefit from a todo list. I can create one to track progress if you'd like.";
@@ -201,6 +267,42 @@ class Agent {
     }
     
     return this.chat(userInput);
+  }
+
+  async executeTodoSequence(): Promise<string> {
+    const nextTodo = this.getNextPendingTodo();
+    if (!nextTodo) {
+      return "No pending todos to execute.";
+    }
+
+    console.log(`\n🚀 Starting todo execution sequence...`);
+    
+    let result = "";
+    while (this.getNextPendingTodo()) {
+      const currentTodo = this.getNextPendingTodo();
+      if (!currentTodo) break;
+      
+      console.log(`\n🔄 Working on: ${currentTodo.content}`);
+      
+      // Auto-start the next todo
+      const todoPrompt = await this.autoProgressToNextTodo();
+      if (todoPrompt) {
+        const response = await this.chat(todoPrompt);
+        result += response + "\n\n";
+      }
+      
+      // Safety check to prevent infinite loops
+      const stillInProgress = this.getCurrentInProgressTodo();
+      if (stillInProgress && stillInProgress.id === currentTodo.id) {
+        console.log(`⚠️  Todo "${currentTodo.content}" appears stuck. Manual intervention may be needed.`);
+        break;
+      }
+    }
+    
+    const completed = this.todos.filter(t => t.status === 'completed').length;
+    const total = this.todos.length;
+    
+    return `Todo sequence completed! ${completed}/${total} todos finished.`;
   }
 }
 
